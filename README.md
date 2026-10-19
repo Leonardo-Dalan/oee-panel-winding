@@ -21,7 +21,11 @@ Firebase Realtime Database (opcional, para sincronizar vários PCs).
 
 
 
-https://github.com/user-attachments/assets/bca6dc1b-13dc-49d4-9926-d04465a78c01
+
+
+https://github.com/user-attachments/assets/2c77f764-1007-4c90-a6aa-1cb078119358
+
+
 
 
 
