@@ -1,0 +1,34 @@
+# Dependencies / build output
+node_modules/
+
+# test artifacts
+coverage/
+*.log
+npm-debug.log*
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# --- NEVER commit real production data or credentials ---
+# Exported reports contain operator names, serial numbers and order numbers.
+*.csv
+!docs/sample-report.csv
+
+# Backups of the pre-refactor single-file version
+OEE_Panel_Bobinadeiras*.html
+OEE_Panel_Bobinadeiras*.txt
+*.original.html
+*.bak
+
+# Firebase config: the Realtime Database URL is a credential in practice.
+# It grants read/write to the whole production state, so it stays local.
+.firebaserc
+firebase.json
+*firebase*.json

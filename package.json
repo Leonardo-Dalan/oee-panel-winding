@@ -1,0 +1,13 @@
+{
+  "name": "oee-panel-winding",
+  "version": "3.0.0",
+  "private": true,
+  "description": "OEE panel for winding machines - production tracking and effectiveness measurement. The app itself has zero dependencies; jsdom is only needed to run the test suite.",
+  "scripts": {
+    "test": "node tests/smoke-test.js",
+    "serve": "python -m http.server 8000"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}

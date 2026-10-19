@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OEE // PANEL - Winding Machine MES v3.0</title>
+    <link rel="stylesheet" href="css/tokens.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+    <!-- ==================== TOPBAR ==================== -->
+    <header class="topbar hidden" id="mainTopbar">
+        <div class="nav-left">
+            <div class="logo">🏭 OEE<span>//</span>PANEL</div>
+            <nav class="nav-tabs">
+                <button class="nav-tab active" id="tabBtnStation" data-action="nav" data-arg="station">⏱️ Station</button>
+                <button class="nav-tab" id="tabBtnDashboard" data-action="nav" data-arg="dashboard">📊 Dashboard</button>
+                <button class="nav-tab" id="tabBtnSetup" data-action="nav" data-arg="setup">⚙️ Setup &amp; Admin</button>
+            </nav>
+        </div>
+        <div class="nav-right">
+            <div class="sync-badge" title="Realtime synchronization status">
+                <span class="sync-dot" id="syncDot"></span>
+                <span id="syncText">Local Live Sync</span>
+            </div>
+            <button class="btn-sm" data-action="export-csv">📊 Export Excel (CSV)</button>
+            <div class="user-pill">
+                <strong id="topUserName">Operator</strong>
+                <span id="topUserShift">1st Shift</span>
+            </div>
+            <button class="btn-sm" data-action="logout">[→ Sign out]</button>
+        </div>
+    </header>
+
+    <!-- ==================== VIEW 1: LOGIN ==================== -->
+    <section id="viewLogin">
+        <div class="login-card">
+            <div style="text-align:center; margin-bottom:26px;">
+                <div class="logo" style="justify-content:center; font-size:24px; margin-bottom:6px;">🏭 OEE<span>//</span>PANEL</div>
+                <p style="font-size:12px; color:var(--text-muted);">Winding Machine Execution &amp; OEE System</p>
+            </div>
+
+            <div class="form-group">
+                <label>Username / Login</label>
+                <input type="text" id="loginUser" class="form-control" placeholder="Enter your username" autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>Password / PIN</label>
+                <input type="password" id="loginPass" class="form-control" placeholder="••••••••" autocomplete="current-password">
+            </div>
+            <div class="form-group">
+                <label>Select Shift</label>
+                <select id="loginShift" class="form-control">
+                    <option value="1st Shift (06:00 AM - 02:30 PM)">1st Shift (06:00 AM - 02:30 PM)</option>
+                    <option value="2nd Shift (02:30 PM - 11:00 PM)">2nd Shift (02:30 PM - 11:00 PM)</option>
+                    <option value="Overtime">Overtime</option>
+                </select>
+            </div>
+
+            <button class="btn-primary" style="margin-top:8px;" data-action="login">Sign In →</button>
+        </div>
+    </section>
+
+    <!-- ==================== VIEW 2: OPERATOR STATION ==================== -->
+    <section id="viewStation" class="hidden" style="flex:1; display:flex; flex-direction:column;">
+        <div class="subbar">
+            <div class="machine-select-wrap">
+                <span class="machine-label">⚙️ MACHINE</span>
+                <select id="stationMachineSelect" class="machine-select"></select>
+                <div id="stationStatusBadge" class="status-pill status-IDLE">
+                    <span class="status-dot"></span>
+                    <span id="stationStatusText">STANDBY / IDLE</span>
+                </div>
+            </div>
+            <div style="text-align:right; font-size:12px; color:var(--text-muted);">
+                <strong id="subbarTransfInfo" style="color:var(--text-main); display:block;">Standby - Ready to Start</strong>
+                <span id="subbarClock">00:00:00</span>
+            </div>
+        </div>
+
+        <div class="station-grid">
+            <!-- LEFT: MAIN PAD + ACTION BUTTONS -->
+            <div class="terminal-col">
+                <div id="mainPad" class="main-pad" data-action="pad-press"></div>
+
+                <div class="action-bar">
+                    <button class="act-btn btn-stop" data-action="open-stop">
+                        <span class="icon">⏸</span>
+                        <span>Stop Machine</span>
+                    </button>
+                    <button class="act-btn" data-action="undo">
+                        <span class="icon">↩</span>
+                        <span>Undo Last Press</span>
+                    </button>
+                    <button class="act-btn btn-rework" data-action="open-rework">
+                        <span class="icon">↺</span>
+                        <span>Rework / Return Layer</span>
+                    </button>
+                    <button class="act-btn" data-action="open-note" data-arg="0">
+                        <span class="icon">📝</span>
+                        <span>Add Shift Note</span>
+                    </button>
+                    <button class="act-btn btn-handover" data-action="open-note" data-arg="1">
+                        <span class="icon">🔄</span>
+                        <span>Shift Handover</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- RIGHT: TRANSFORMER, LIVE OEE & LAYER HISTORY / SHIFT NOTES -->
+            <div class="info-col">
+                <div class="panel-card">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <span class="card-label">TRANSFORMER</span>
+                            <div class="sn-title" id="infoSN">—</div>
+                            <div class="model-sub" id="infoModel">Standby - Click "+ New Transf." to begin</div>
+                        </div>
+                        <button class="btn-sm" data-action="open-transformer">+ New Transf.</button>
+                    </div>
+
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <span>WORK ORDER</span>
+                            <strong id="infoWO">—</strong>
+                        </div>
+                        <div class="meta-item">
+                            <span>BATCH / QTY</span>
+                            <strong id="infoBatch">—</strong>
+                        </div>
+                        <div class="meta-item">
+                            <span>RATING / VOLTAGE</span>
+                            <strong id="infoRating">—</strong>
+                        </div>
+                        <div class="meta-item">
+                            <span>REWORKED LAYERS</span>
+                            <strong id="infoReworks" style="color:var(--amber);">0</strong>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                        <span class="prog-percent" id="infoPercent">0%</span>
+                        <span style="font-size:13px; color:var(--text-muted);" id="infoLayerCount">0 / 0 layers</span>
+                    </div>
+                    <div class="prog-bar">
+                        <div class="prog-fill" id="infoProgFill" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <!-- MACHINE OEE MINI CARD -->
+                <div class="panel-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="card-label">CURRENT MACHINE OEE (STARTS AT 100%)</span>
+                        <span class="target-tag" id="infoOeeTarget">TARGET 85%</span>
+                    </div>
+                    <div class="oee-mini-grid">
+                        <div class="oee-mini-box">
+                            <span>OEE</span>
+                            <strong id="stationOEE" style="color:var(--cyan);">100.0%</strong>
+                        </div>
+                        <div class="oee-mini-box">
+                            <span>AVAIL.</span>
+                            <strong id="stationAvail" style="color:var(--green);">100.0%</strong>
+                        </div>
+                        <div class="oee-mini-box">
+                            <span>PERF.</span>
+                            <strong id="stationPerf" style="color:var(--green);">100.0%</strong>
+                        </div>
+                        <div class="oee-mini-box">
+                            <span>QUAL.</span>
+                            <strong id="stationQual" style="color:var(--green);">100.0%</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DUAL TAB CARD: LAYER HISTORY & SHIFT NOTES -->
+                <div class="panel-card" style="flex:1; display:flex; flex-direction:column;">
+                    <div class="mini-tabs">
+                        <button class="mini-tab-btn active" id="btnSubTabLayers" data-action="subtab" data-arg="layers">⏱️ Layer History</button>
+                        <button class="mini-tab-btn" id="btnSubTabNotes" data-action="subtab" data-arg="notes">📋 Shift Notes</button>
+                    </div>
+
+                    <!-- TAB 1: LAYER BY LAYER HISTORY -->
+                    <div id="subTabLayersContent" class="log-scroll"></div>
+
+                    <!-- TAB 2: SHIFT NOTES -->
+                    <div id="subTabNotesContent" class="log-scroll hidden"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== VIEW 3: DASHBOARD ==================== -->
+    <section id="viewDashboard" class="hidden">
+        <div class="page-wrap">
+            <div class="filter-bar">
+                <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                    <div>
+                        <label style="font-size:10px; color:var(--text-muted); display:block; font-weight:700;">MACHINE FILTER</label>
+                        <select id="dashMachineFilter" class="form-control filter-control">
+                            <option value="ALL">All Active Winding Machines</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:10px; color:var(--text-muted); display:block; font-weight:700;">TIME PERIOD</label>
+                        <select id="dashPeriodFilter" class="form-control filter-control">
+                            <option value="shift" selected>Current Shift (live)</option>
+                            <option value="1">Daily (Last 24 Hours)</option>
+                            <option value="7">Weekly (Last 7 Days)</option>
+                            <option value="30">Monthly (Last 30 Days)</option>
+                            <option value="365" selected>Accumulated (Last 12 Months)</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-sm" data-action="export-csv">📊 Download Excel Report (.CSV)</button>
+                </div>
+            </div>
+
+            <!-- 6 KPI CARDS -->
+            <div class="kpi-row">
+                <div class="kpi-box">
+                    <span>Global OEE</span>
+                    <strong id="kpiOEE" style="color:var(--cyan);">100.0%</strong>
+                    <small>Avail × Perf × Qual</small>
+                </div>
+                <div class="kpi-box">
+                    <span>Availability</span>
+                    <strong id="kpiAvail" style="color:var(--green);">100.0%</strong>
+                    <small>Starts 100% (Drops on Stop)</small>
+                </div>
+                <div class="kpi-box">
+                    <span>Performance</span>
+                    <strong id="kpiPerf" style="color:var(--cyan);">100.0%</strong>
+                    <small id="kpiPerfHint">Standard vs Actual Pace</small>
+                </div>
+                <div class="kpi-box">
+                    <span>Quality</span>
+                    <strong id="kpiQual" style="color:var(--amber);">100.0%</strong>
+                    <small>Starts 100% (Drops on Rework)</small>
+                </div>
+                <div class="kpi-box">
+                    <span>MTBF</span>
+                    <strong id="kpiMTBF" style="color:var(--text-main);">0m</strong>
+                    <small>Mean Time Between Failures</small>
+                </div>
+                <div class="kpi-box">
+                    <span>MTTR</span>
+                    <strong id="kpiMTTR" style="color:var(--red);">0m</strong>
+                    <small>Mean Time To Repair</small>
+                </div>
+            </div>
+
+            <div class="dash-grid">
+                <div class="panel-card">
+                    <span class="card-label">🔴 UNPLANNED DOWNTIME PARETO (HURTS OEE)</span>
+                    <div id="dashParetoList" class="mt-14"></div>
+                </div>
+
+                <div class="panel-card">
+                    <span class="card-label">⚡ AUTO-LEARNED AVERAGE TIMES PER TRANSFORMER TYPE</span>
+                    <table class="mt-12">
+                        <thead>
+                            <tr>
+                                <th>Model / Type</th>
+                                <th>Avg Box Time</th>
+                                <th>Avg Layer Time</th>
+                                <th>Done Count</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashLearnedTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- DOWNTIME TRACKING: every stop, planned or not -->
+            <div class="panel-card mb-20">
+                <div class="flex-between-wrap">
+                    <div>
+                        <span class="card-label">⏱️ DOWNTIME TRACKING (EVERY STOP)</span>
+                        <p class="hint-text">
+                            Each line is one stop, with start time, end time, duration and reason.
+                            Planned stops are listed for traceability but do not count against Availability.
+                        </p>
+                    </div>
+                    <div class="stop-summary" id="dashStopSummary"></div>
+                </div>
+                <div class="table-scroll mt-12">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Machine</th>
+                                <th>Reason</th>
+                                <th>Type</th>
+                                <th>Start</th>
+                                <th>End</th>
+                                <th>Duration</th>
+                                <th>Operator</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashStopsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- LIVE WINDING MACHINES OVERVIEW -->
+            <div class="panel-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span class="card-label">🏭 LIVE WINDING MACHINES OVERVIEW (REALTIME)</span>
+                    <span class="live-tag" id="dashSyncStatus">● Live Updating</span>
+                </div>
+                <table class="mt-12">
+                    <thead>
+                        <tr>
+                            <th>Machine</th>
+                            <th>Live Status</th>
+                            <th>Active Transformer</th>
+                            <th>Batch</th>
+                            <th>Current Step</th>
+                            <th>Step Timer</th>
+                            <th>Reworks</th>
+                            <th>Machine OEE</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dashMachinesTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== VIEW 4: ADMIN SETUP & CLOUD SYNC ==================== -->
+    <section id="viewSetup" class="hidden">
+        <div class="page-wrap">
+
+            <!-- PRODUCTION SETTINGS (Etapa 4: values that used to be hardcoded) -->
+            <div class="panel-card mb-20">
+                <div class="card-label">🎯 PRODUCTION SETTINGS</div>
+                <p class="hint-text">
+                    These values were hardcoded in the source. They are now configurable here and saved in this PC only.
+                </p>
+                <div class="settings-grid mt-12">
+                    <div class="form-group">
+                        <label>OEE Target (%)</label>
+                        <input type="number" id="setOeeTarget" class="form-control" min="1" max="100" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Performance Mode</label>
+                        <select id="setPerformanceMode" class="form-control">
+                            <option value="FIXED_100">Fixed 100% (never penalizes)</option>
+                            <option value="LEARNED">Calculated vs. model standard time</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Cooldown after each press (seconds)</label>
+                        <input type="number" id="setCooldownSec" class="form-control" min="0" max="30" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Keep event history for (days)</label>
+                        <input type="number" id="setRetentionDays" class="form-control" min="1" max="3650" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Shift start hour (0-23)</label>
+                        <input type="number" id="setShiftStartHour" class="form-control" min="0" max="23" step="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Shift length (hours)</label>
+                        <input type="number" id="setShiftLengthHours" class="form-control" min="0.5" max="24" step="0.5">
+                    </div>
+                </div>
+                <p class="hint-text hint-small">
+                    The shift is the OEE's unit of accountability. Its length is the <b>fixed denominator</b>
+                    the shift OEE is measured against, so a loss recorded at the start of a shift stays fully
+                    visible at the end. Set the shift grid to match your plant.
+                </p>
+                <button class="btn-primary settings-save" data-action="save-settings">💾 Save Production Settings</button>
+            </div>
+
+            <!-- FIREBASE CLOUD REALTIME CONNECTION -->
+            <div class="panel-card mb-20 firebase-card">
+                <div class="flex-between-wrap">
+                    <div>
+                        <span class="card-label cloud-label">🌐 MULTI-PC REALTIME CLOUD SYNC (FIREBASE DATABASE URL)</span>
+                        <p class="hint-text">
+                            To connect multiple factory PCs in real time: create a free Realtime Database at
+                            <b>console.firebase.google.com</b>, copy the URL
+                            (e.g. <code>https://your-project-default-rtdb.firebaseio.com</code>) and paste it below on each PC.
+                        </p>
+                    </div>
+                </div>
+                <div id="firebaseSecurityWarning" class="alert alert-warn hidden">
+                    <strong>⚠️ Security warning:</strong> a Firebase Realtime Database created in <em>Test Mode</em> accepts
+                    reads and writes from <em>anyone</em>, from any PC that knows this URL — including strangers.
+                    Anyone with the URL can read all production data and can write/alter it.
+                    Before putting real production data in it, switch the database to <b>Locked Mode</b> and configure
+                    authentication rules. See the README for the exact rules.
+                </div>
+                <div class="flex-row-wrap mt-12">
+                    <input type="text" id="firebaseUrlInput" class="form-control flex-grow" placeholder="https://your-factory-db-default-rtdb.firebaseio.com">
+                    <button class="btn-primary btn-auto" data-action="save-firebase">🔗 Connect Realtime Cloud</button>
+                    <button class="btn-sm btn-danger-ghost" data-action="reset-demo">🔄 Reset All Factory Data (Clean Start)</button>
+                </div>
+                <div id="firebaseStatusLine" class="cloud-status cloud-status-off"></div>
+            </div>
+
+            <div class="dash-grid">
+                <!-- 1. TRANSFORMER MODELS -->
+                <div class="panel-card">
+                    <span class="card-label">⚡ REGISTER TRANSFORMER MODEL (PRE-SELECT RECIPE)</span>
+                    <div class="grid-2 mt-12">
+                        <input type="text" id="newModelName" class="form-control" placeholder="Model Name (e.g. 500kVA Dist)">
+                        <input type="number" id="newModelLayers" class="form-control" placeholder="Default Layers (e.g. 80)">
+                        <input type="text" id="newModelRating" class="form-control" placeholder="Rating (e.g. 500 kVA)">
+                        <input type="text" id="newModelVolt" class="form-control" placeholder="Voltage (e.g. 13.8kV / 380V)">
+                    </div>
+                    <p class="hint-text hint-small">
+                        Standard times feed the <b>Performance</b> metric: it compares how long each step
+                        actually took against the standard. Leave a field at <b>0</b> for <b>AUTO</b>, and the
+                        engine calibrates it from that model's own measured average. Type an explicit
+                        number of seconds to override it. The rightmost column shows what is in use right now.
+                    </p>
+                    <button class="btn-primary btn-block-gap" data-action="add-model">+ Save Transformer Model</button>
+                    <table class="mt-14">
+                        <thead><tr><th>Model</th><th>Layers</th><th>Spec</th><th>Std Box (s)</th><th>Std Layer (s)</th><th>In use</th><th></th></tr></thead>
+                        <tbody id="setupModelsTable"></tbody>
+                    </table>
+                </div>
+
+                <!-- 2. STOP REASONS -->
+                <div class="panel-card">
+                    <span class="card-label">⏸ REGISTER NEW STOP / DOWNTIME REASON</span>
+                    <div class="grid-2-1 mt-12">
+                        <input type="text" id="newStopName" class="form-control" placeholder="Reason Name (e.g. Tooling adjustment)">
+                        <select id="newStopCategory" class="form-control">
+                            <option value="UNPLANNED">Unplanned (Red - Hurts OEE)</option>
+                            <option value="PLANNED">Planned (Yellow - No OEE Hit)</option>
+                        </select>
+                    </div>
+                    <button class="btn-primary btn-block-gap" data-action="add-stop">+ Add Stop Reason</button>
+                    <table class="mt-14">
+                        <thead><tr><th>Reason</th><th>Category</th><th></th></tr></thead>
+                        <tbody id="setupStopsTable"></tbody>
+                    </table>
+                </div>
+
+                <!-- 3. WINDING MACHINES -->
+                <div class="panel-card">
+                    <span class="card-label">⚙️ MANAGE WINDING MACHINES</span>
+                    <div class="grid-1-2 mt-12">
+                        <input type="text" id="newMachCode" class="form-control" placeholder="Code (e.g. W06)">
+                        <input type="text" id="newMachName" class="form-control" placeholder="Machine Name (e.g. Winding Machine 06)">
+                    </div>
+                    <button class="btn-primary btn-block-gap" data-action="add-machine">+ Add Winding Machine</button>
+                    <table class="mt-14">
+                        <thead><tr><th>Code</th><th>Name</th><th>Status</th><th>Action</th></tr></thead>
+                        <tbody id="setupMachinesTable"></tbody>
+                    </table>
+                </div>
+
+                <!-- 4. USERS -->
+                <div class="panel-card">
+                    <span class="card-label">👥 MANAGE OPERATORS, MANAGERS &amp; ADMINS</span>
+                    <div class="grid-3 mt-12">
+                        <input type="text" id="newUserName" class="form-control" placeholder="Login User" autocomplete="off">
+                        <input type="text" id="newUserPass" class="form-control" placeholder="Password" autocomplete="off">
+                        <select id="newUserRole" class="form-control">
+                            <option value="OPERATOR">Operator</option>
+                            <option value="MANAGER">Manager</option>
+                            <option value="ADMIN">Admin</option>
+                        </select>
+                    </div>
+                    <p class="hint-text hint-small">Passwords are stored as a salted SHA-256 hash — they cannot be read back, only reset.</p>
+                    <button class="btn-primary btn-block-gap" data-action="add-user">+ Create User</button>
+                    <table class="mt-12">
+                        <thead><tr><th>Username</th><th>Role</th><th></th></tr></thead>
+                        <tbody id="setupUsersTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ==================== MODAL 1: STOP MACHINE ==================== -->
+    <div class="modal-backdrop" id="modalStop" data-action="close-modal" data-arg="modalStop">
+        <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="modalStopTitle">
+            <div class="modal-header">
+                <span class="modal-title" id="modalStopTitle">⏸ SELECT DOWNTIME / STOP REASON</span>
+                <button class="close-btn" data-action="close-modal" data-arg="modalStop" aria-label="Close">✕</button>
+            </div>
+            <div class="stop-group-title">UNPLANNED (HURTS AVAILABILITY)</div>
+            <div class="stop-grid" id="stopGridUnplanned"></div>
+
+            <div class="stop-group-title mt-22">PLANNED (EXCLUDED FROM PLANNED TIME)</div>
+            <div class="stop-grid" id="stopGridPlanned"></div>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 2: NEW TRANSFORMER ==================== -->
+    <div class="modal-backdrop" id="modalNewTransf" data-action="close-modal" data-arg="modalNewTransf">
+        <div class="modal-box modal-narrow" role="dialog" aria-modal="true" aria-labelledby="modalNewTransfTitle">
+            <div class="modal-header">
+                <span class="modal-title" id="modalNewTransfTitle">⚡ START NEW TRANSFORMER</span>
+                <button class="close-btn" data-action="close-modal" data-arg="modalNewTransf" aria-label="Close">✕</button>
+            </div>
+            <div class="form-group">
+                <label>Transformer Model / Type (Auto-fills Layers)</label>
+                <select id="ntModelSelect" class="form-control"></select>
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Transformer ID / Serial (SN)</label>
+                    <input type="text" id="ntSN" class="form-control" placeholder="e.g. SN 405">
+                </div>
+                <div class="form-group">
+                    <label>Work Order (OP)</label>
+                    <input type="text" id="ntWO" class="form-control" placeholder="e.g. WO-9920">
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Batch / Quantity (e.g. 1 of 3)</label>
+                    <input type="text" id="ntBatch" class="form-control" placeholder="1 of 3" value="1 of 3">
+                </div>
+                <div class="form-group">
+                    <label>Total Layers</label>
+                    <input type="number" id="ntLayers" class="form-control" value="80">
+                </div>
+            </div>
+            <button class="btn-primary" data-action="confirm-transformer">▶ Start Step 1: Box Assembly</button>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 3: REWORK / RETURN TO LAYER X ==================== -->
+    <div class="modal-backdrop" id="modalRework" data-action="close-modal" data-arg="modalRework">
+        <div class="modal-box modal-tiny" role="dialog" aria-modal="true" aria-labelledby="modalReworkTitle">
+            <div class="modal-header">
+                <span class="modal-title" id="modalReworkTitle">↺ REWORK / RETURN TO LAYER X</span>
+                <button class="close-btn" data-action="close-modal" data-arg="modalRework" aria-label="Close">✕</button>
+            </div>
+            <p class="hint-text mb-14">
+                Enter the layer number you need to unwind back to. Unwound layers will immediately reduce the Quality % and OEE.
+            </p>
+            <div class="form-group">
+                <label>Current Layer</label>
+                <input type="text" id="rwCurrentLayer" class="form-control" disabled>
+            </div>
+            <div class="form-group">
+                <label>Return to Layer Number (1 to Current)</label>
+                <input type="number" id="rwTargetLayer" class="form-control" min="1">
+            </div>
+            <div class="form-group">
+                <label>Rework Reason / Defect</label>
+                <input type="text" id="rwReason" class="form-control" placeholder="e.g. Insulation shift / Wire overlap">
+            </div>
+            <button class="btn-primary btn-amber" data-action="confirm-rework">↺ Confirm Return &amp; Log Rework</button>
+        </div>
+    </div>
+
+    <!-- ==================== MODAL 4: SHIFT NOTE / HANDOVER ==================== -->
+    <div class="modal-backdrop" id="modalNote" data-action="close-modal" data-arg="modalNote">
+        <div class="modal-box modal-note" role="dialog" aria-modal="true" aria-labelledby="noteModalTitle">
+            <div class="modal-header">
+                <span class="modal-title" id="noteModalTitle">📝 ADD SHIFT NOTE</span>
+                <button class="close-btn" data-action="close-modal" data-arg="modalNote" aria-label="Close">✕</button>
+            </div>
+            <div class="form-group">
+                <label>Exact Sub-Step / Machine State</label>
+                <select id="noteSubStep" class="form-control">
+                    <option value="Winding Copper Wire">Winding Copper Wire (Enrolando Cobre)</option>
+                    <option value="Applying Insulation Paper">Applying Insulation Paper (Colocando Isolação)</option>
+                    <option value="Installing Extra Components / Taps">Installing Extra Components / Taps</option>
+                    <option value="Box Assembly in Progress">Box Assembly in Progress</option>
+                    <option value="Finalizing Transformer">Finalizing Transformer</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Note / Instructions for Next Shift</label>
+                <textarea id="noteText" rows="3" class="form-control" placeholder="Describe any observation, wire tension, or pending task..."></textarea>
+            </div>
+            <button class="btn-primary" id="noteConfirmBtn" data-action="confirm-note">Save Note</button>
+        </div>
+    </div>
+
+    <!-- Toast container (replaces native alert/confirm) -->
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- ==================== SCRIPTS ====================
+         Classic scripts (no type="module") on purpose: this app must run from
+         file:// by double-click. Modules would be blocked by CORS in that case.
+         Load order matters - dependencies first.                              -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/crypto.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/sync.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/metrics.js"></script>
+    <script src="js/machines.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/views/station.js"></script>
+    <script src="js/views/dashboard.js"></script>
+    <script src="js/views/setup.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
