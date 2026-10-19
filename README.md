@@ -17,7 +17,17 @@ Firebase Realtime Database (opcional, para sincronizar vários PCs).
 
 🌐 **Online:** https://papaya-cannoli-ab3a0d.netlify.app
 
-<!-- 🎬 Vídeo demo (~15 s de captura de tela real) — adicionar aqui quando estiver gravado -->
+
+
+
+
+https://github.com/user-attachments/assets/bca6dc1b-13dc-49d4-9926-d04465a78c01
+
+
+
+
+
+
 
 ---
 
