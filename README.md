@@ -1,21 +1,23 @@
-# OEE Panel — Winding Machine MES
+# OEE Panel: Winding Machine MES
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-*Real-time OEE monitoring dashboard for transformer winding machines — lightweight, offline-first web app (vanilla JS + Firebase).*
+*Real-time OEE monitoring dashboard for transformer winding machines: lightweight, offline-first web app (vanilla JS + Firebase).*
 
-Painel de produção e medição de **OEE** (Overall Equipment Effectiveness) para
-máquinas de bobinagem de transformadores.
+Production and measurement dashboard for **OEE** (Overall Equipment Effectiveness) for
+transformer winding machines.
 
-Roda direto no navegador, sem servidor, sem build e sem dependências externas.
-Feito para ser aberto por duplo clique na máquina do operador, dentro da fábrica.
+Runs directly in the browser, with no server, no build, and no external dependencies.
+Designed to be opened by double-clicking on the operator's machine, inside the factory.
 
-**Stack:** HTML + CSS + JavaScript puro (*classic scripts*), `localStorage`,
-Firebase Realtime Database (opcional, para sincronizar vários PCs).
+**Stack:** HTML + CSS + pure JavaScript (*classic scripts*), `localStorage`,
+Firebase Realtime Database (optional, to sync multiple PCs).
 
-## Demonstração
+## Demo
 
 🌐 **Online:** https://oeewinding.netlify.app
+
+
 
 
 
@@ -32,93 +34,92 @@ https://github.com/user-attachments/assets/2c77f764-1007-4c90-a6aa-1cb078119358
 
 
 
-
 ---
 
-## Como abrir
+## How to open
 
-**Opção 1 — duplo clique (recomendado para a fábrica)**
+**Option 1: double-click (recommended for the factory)**
 
-Clique duas vezes em `index.html`. Pronto.
+Double-click `index.html`. Done.
 
-**Opção 2 — servidor local (apenas para desenvolvimento)**
+**Option 2: local server (development only)**
 
 ```bash
 python -m http.server 8000
 # depois abra http://localhost:8000
 ```
 
-> O código usa *classic scripts* de propósito. ES Modules não carregam via
-> `file://` (o navegador bloqueia por CORS), então abrir por duplo clique
-> quebraria a tela em branco. O código está organizado em módulos mesmo assim.
+> The code uses *classic scripts* on purpose. ES Modules do not load via
+> `file://` (the browser blocks them due to CORS), so opening by double-click
+> would break with a blank screen. The code is still organized into modules.
 
 ---
 
-## Usuários padrão (demonstração)
+## Default users (demo)
 
-| Login | Senha | Perfil | Acesso |
+| Login | Password | Role | Access |
 |---|---|---|---|
-| `operador` | `operador123` | Operator | Só a estação de trabalho |
-| `gestor` | `gestor123` | Manager | Estação + Dashboard |
-| `admin` | `admin123` | Admin | Tudo, incluindo Setup & Admin |
+| `operador` | `operador123` | Operator | Workstation only |
+| `gestor` | `gestor123` | Manager | Station + Dashboard |
+| `admin` | `admin123` | Admin | Everything, including Setup & Admin |
 
-As senhas são guardadas como **hash SHA-256 com salt por usuário** — não dá para
-ler a senha de volta, só redefinir. Troque-as antes de usar em produção:
+Passwords are stored as a **SHA-256 hash with a per-user salt**; there is no way to
+read the password back, only reset it. Change them before using in production:
 *Setup & Admin → Manage Users*.
 
-> Aviso: SHA-256 puro é adequado para um app 100% local, mas **não** substitui
-> argon2/bcrypt em um sistema com servidor. Se um dia isto virar multi-usuário
-> de rede, a autenticação precisa ir para um backend.
+> Warning: plain SHA-256 is suitable for a 100% local app, but it does **not** replace
+> argon2/bcrypt in a system with a server. If this ever becomes a multi-user
+> network system, authentication needs to move to a backend.
 
 ---
 
-## O que o sistema faz
+## What the system does
 
-### Estação do operador
-- Seleciona a máquina e acompanha o status (Standby / Running / Planned Stop / Unplanned)
-- Painel grande para registrar o avanço: **Caixa → Camada 1 → … → Camada N → Finalizar**
-- Aceita clique, `ESPAÇO`, `Enter` ou pedal de pé
-- Bloqueio de 3 s após cada toque, para não registrar camadas em dobro
-- Desfazer o último toque, retrabalho (voltar para uma camada), notas de turno e passagem de turno
-- Parada com motivo: **não planejada** (ataca a disponibilidade) ou **planejada** (não ataca)
-- **Histórico único** com os passos de fabricação **e todas as paradas**: início, fim,
-  duração, motivo e selo `PLANNED` / `UNPLANNED`
+### Operator station
+- Selects the machine and tracks status (Standby / Running / Planned Stop / Unplanned)
+- Large panel to record progress: **Box → Layer 1 → … → Layer N → Finish**
+- Accepts click, `SPACE`, `Enter`, or a foot pedal
+- 3 s lock after each touch, to avoid recording layers twice
+- Undo the last touch, rework (go back to a layer), shift notes, and shift handover
+- Stop with reason: **unplanned** (hits availability) or **planned** (does not hit)
+- **Single history** with manufacturing steps **and all stops**: start, end,
+  duration, reason, and `PLANNED` / `UNPLANNED` badge
 
 ### Dashboard
-- KPIs: OEE, Disponibilidade, Performance, Qualidade, MTBF, MTTR
-- **OEE fica vermelho** quando está abaixo do OEE Target configurado
-- **Tabela de rastreamento de paradas**: máquina, motivo, tipo, início, fim, duração e operador,
-  com resumo de paradas programadas vs. não programadas
-- Pareto de paradas não planejadas
-- Tempos médios aprendidos automaticamente por tipo de transformador
-- Tabela de máquinas ao vivo
+- KPIs: OEE, Availability, Performance, Quality, MTBF, MTTR
+- **OEE turns red** when below the configured OEE Target
+- **Downtime tracking table**: machine, reason, type, start, end, duration, and operator,
+  with a summary of planned vs. unplanned stops
+- Pareto of unplanned stops
+- Average times learned automatically by transformer type
+- Live machine table
 
-### Setup & Admin (somente admin)
-- Cadastro de modelos de transformador, motivos de parada e máquinas
-- Usuários e perfis
-- **Configurações de produção**: OEE Target, modo de Performance, cooldown,
-  retenção do histórico, **início e duração do turno**
-- Conexão opcional com Firebase para sincronizar vários PCs
+### Setup & Admin (admin only)
+- Registration of transformer models, stop reasons, and machines
+- Users and roles
+- **Production settings**: OEE Target, Performance mode, cooldown,
+  history retention, **shift start and duration**
+- Optional Firebase connection to sync multiple PCs
 
 ---
 
-## Como o OEE é calculado
+## How OEE is calculated
 
 ```
 OEE = Disponibilidade × Performance × Qualidade
 ```
 
-Existem **duas janelas**, de propósito:
+There are **two windows**, on purpose:
 
-| Janela | Onde | Denominador | Perda registrada |
+| Window | Where | Denominator | Recorded loss |
 |---|---|---|---|
-| **Turno atual** | Estação e *Current Shift* no Dashboard | **duração fixa do turno** | **permanente** |
-| Dia / Semana / Mês / 12 meses | seletor de período do Dashboard | tamanho da janela | pode diluir ao longo dos dias |
+| **Current shift** | Station and *Current Shift* on the Dashboard | **fixed shift duration** | **permanent** |
+| Day / Week / Month / 12 months | Dashboard period selector | window size | can dilute over the days |
 
-### O OEE do turno NÃO se cura
+### Shift OEE does NOT heal
 
-O turno é a **unidade de responsabilidade**. O denominador é a duração fixa do
-turno, e cada perda é um débito permanente em segundos:
+The shift is the **unit of responsibility**. The denominator is the fixed shift
+duration, and each loss is a permanent debit in seconds:
 
 ```
 Disponibilidade = 1 − segundosNãoPlanejados / duraçãoDoTurno
@@ -126,195 +127,195 @@ Performance     = 1 − segundosAcimaDoPadrão / duraçãoDoTurno
 Qualidade       = 1 − segundosDeRetrabalho   / duraçãoDoTurno
 ```
 
-Como cada parcela de perda **só cresce** dentro do turno, todos os KPIs são
-**monotônicos**: só podem cair ou ficar parados. Produzir mais **não** empurra
-o número de volta para 100% só porque a produção continuou.
+Since each loss component **only grows** within the shift, all KPIs are
+**monotonic**: they can only fall or stay flat. Producing more does **not** push
+the number back to 100% just because production continued.
 
-> **Por que isso importa.** As fórmulas clássicas usam um denominador que
-> cresce a cada segundo de produção:
-> `Disponibilidade = rodando / (rodando + parado)` e
-> `Qualidade = boas / (boas + refeitas)`. Com elas, uma perda às 8h já tinha
-> se dissolvido sozinha às 17h, e o turno "sarava". Medindo contra a duração
-> fixa do turno, uma perda registrada às 8h continua totalmente visível às 17h.
+> **Why this matters.** Classic formulas use a denominator that grows with
+> every second of production:
+> `Availability = running / (running + stopped)` and
+> `Quality = good / (good + reworked)`. With them, a loss at 8 a.m. would already have
+> dissolved by 5 p.m., and the shift would "heal." Measured against the fixed
+> shift duration, a loss recorded at 8 a.m. is still fully visible at 5 p.m.
 >
-> Num turno em que a produção preenche a janela, os dois modelos convergem:
-> `segundosDeRetrabalho / duraçãoDoTurno ≈ defeitos / peças`. A diferença
-> aparece exatamente quando a produção continua depois da perda — que é o caso
-> que queremos medir.
+> In a shift where production fills the window, the two models converge:
+> `reworkSeconds / shiftDuration ≈ defects / pieces`. The difference
+> appears exactly when production continues after the loss, which is the case
+> we want to measure.
 
-O turno é uma grade de duração fixa ancorada em **Shift start hour**
-(*Production Settings*), ex.: início 6h e 8h de duração → turnos 6h–14h,
-14h–22h, 22h–6h. A duração aceita **valor decimal** em passos de 0,5 h: para
-um turno de 8h30, digite `8.5`. Máquina em *Standby* não conta como perda, e
-parada planejada também não.
+The shift is a fixed-duration grid anchored to **Shift start hour**
+(*Production Settings*), e.g. start at 6 a.m. and 8 h duration → shifts 6 a.m.–2 p.m.,
+2 p.m.–10 p.m., 10 p.m.–6 a.m. The duration accepts a **decimal value** in 0.5 h steps: for
+an 8h30 shift, enter `8.5`. A machine in *Standby* does not count as a loss, and
+a planned stop does not either.
 
 ### Performance
 
-Compara o tempo real de cada passo com o **tempo padrão do modelo**. No turno,
-os segundos gastos **acima** do padrão são a perda:
+Compares the actual time of each step with the **model standard time**. In the shift,
+seconds spent **above** the standard are the loss:
 
 ```
 Performance = 1 − Σ(max(0, tempoReal − tempoPadrão)) / duraçãoDoTurno   (limitado a 100%)
 ```
 
-Bater o padrão não gera crédito; só o excesso de tempo conta contra o turno.
+Meeting the standard does not generate credit; only excess time counts against the shift.
 
-Dois modos, em *Setup & Admin*:
+Two modes, in *Setup & Admin*:
 
-- `LEARNED` — **padrão**. Compara com o tempo padrão do modelo.
-- `FIXED_100` — sempre 100%, nunca penaliza.
+- `LEARNED`: **default**. Compares against the model standard time.
+- `FIXED_100`: always 100%, never penalizes.
 
-Sem nenhum passo concluído ainda, o Performance mostra `—` em vez de um
-`100%` enganoso.
+With no completed step yet, Performance shows a dash (`-`) instead of a
+misleading `100%`.
 
-### Tempo padrão: AUTO
+### Standard time: AUTO
 
-Em *Setup & Admin → Register Transformer Model* há **Std Box (s)** e
+In *Setup & Admin → Register Transformer Model* there are **Std Box (s)** and
 **Std Layer (s)**.
 
-- **`0` = AUTO** — o motor calibra o padrão com a **média real medida** daquele
-  modelo, a partir de 5 passos concluídos. É o padrão recomendado: uma linha
-  que leva 10 s por camada se auto-ajusta em poucos passos.
-- **Número explícito** — sobrescreve o automático.
+- **`0` = AUTO**: the engine calibrates the standard with the **actual measured average** for that
+  model, starting from 5 completed steps. It is the recommended default: a line
+  that takes 10 s per layer self-adjusts in a few steps.
+- **Explicit number**: overrides the automatic one.
 
-A coluna **In use** mostra o padrão que o motor está usando naquele momento
-(`auto 10s`, `600s`, `600s (fallback)`). Sem ela é fácil achar que o padrão
-está errado quando na verdade o AUTO ainda está calibrando.
+The **In use** column shows the standard the engine is using at that moment
+(`auto 10s`, `600s`, `600s (fallback)`). Without it, it is easy to think the standard
+is wrong when in fact AUTO is still calibrating.
 
-> Performance é limitado a 100%: bater o padrão não gera crédito. Se o KPI
-> estiver preso em `100%`, o aviso abaixo dele dirá *"Beating the standard"* —
-> é sinal de que o padrão está alto demais, não de que o cálculo falhou.
+> Performance is capped at 100%: meeting the standard does not generate credit. If the KPI
+> is stuck at `100%`, the warning below it will say *"Beating the standard"*,
+> a sign that the standard is too high, not that the calculation failed.
 
-**Qualidade** debita o tempo padrão das camadas que voltaram para retrabalho.
-É um débito de mão única: refazer as camadas conserta o transformador, mas o
-turno não "recupera" o crédito — a perda continua contando, como deveria.
+**Quality** debits the standard time of layers that went back for rework.
+It is a one-way debit: redoing the layers fixes the transformer, but the
+shift does not "recover" the credit; the loss keeps counting, as it should.
 
-**MTBF / MTTR** só aparecem depois da primeira falha não planejada. Sem
-falhas registradas eles mostram `—`, em vez de um número inventado.
+**MTBF / MTTR** only appear after the first unplanned failure. With no
+failures recorded they show a dash (`-`), instead of an invented number.
 
-**Meta (Target).** O número de OEE é colorido automaticamente: **verde** acima
-do OEE Target, **vermelho** abaixo. Ajuste a meta em *Production Settings*.
-
----
-
-## Changeover entre transformadores
-
-Ao finalizar um transformador a máquina entra em **Setup / Changeover** com
-status **PLANNED** — é uma parada conhecida e consciente, e não é cobrada
-contra a Disponibilidade.
-
-O evento é gravado normalmente (motivo `Setup / Changeover`, com início, fim e
-duração), então dá para construir um KPI de changeover sobre o histórico
-existente sem retrocompatibilidade — basta somar `STOP_PLANNED` onde o motivo
-for esse.
-
-Na lista de motivos de parada em *Setup & Admin*, `Setup / Changeover` também
-já vem classificado como **programada**.
-
-> Classificação atual: `PLANNED`. Está nos planos criar um KPI dedicado de
-> changeover e reavaliar essa classificação.
+**Target.** The OEE number is colored automatically: **green** above
+the OEE Target, **red** below. Adjust the target in *Production Settings*.
 
 ---
 
-## Histórico de paradas
+## Changeover between transformers
 
-Toda parada — **programada ou não** — vira um registro no banco com:
+When a transformer is finished, the machine enters **Setup / Changeover** with
+**PLANNED** status: it is a known and conscious stop, and it is not charged
+against Availability.
 
-| Campo | Conteúdo |
+The event is recorded normally (reason `Setup / Changeover`, with start, end, and
+duration), so it is possible to build a changeover KPI over the existing
+history without breaking compatibility; just sum `STOP_PLANNED` where the reason
+is that one.
+
+In the stop reason list in *Setup & Admin*, `Setup / Changeover` also
+already comes classified as **planned**.
+
+> Current classification: `PLANNED`. There are plans to create a dedicated
+> changeover KPI and reevaluate this classification.
+
+---
+
+## Stop history
+
+Every stop, **planned or not**, becomes a record in the database with:
+
+| Field | Content |
 |---|---|
-| `startTime` | instante em que a máquina parou |
-| `endTime` | instante em que ela voltou |
-| `durationSec` | duração em segundos |
-| `reason` | motivo selecionado |
-| `stopType` | `PLANNED` ou `UNPLANNED` |
+| `startTime` | instant the machine stopped |
+| `endTime` | instant it came back |
+| `durationSec` | duration in seconds |
+| `reason` | selected reason |
+| `stopType` | `PLANNED` or `UNPLANNED` |
 
-Esses registros aparecem em três lugares:
+These records appear in three places:
 
-1. **Estação → Layer History**, com selo colorido e o intervalo `14:32 → 15:07`
-2. **Dashboard → Downtime Tracking**, tabela completa por máquina
-3. **Export CSV**, nas colunas `Start_Time`, `End_Time`, `Reason` e `Event_Type`
+1. **Station → Layer History**, with a colored badge and the interval `14:32 → 15:07`
+2. **Dashboard → Downtime Tracking**, full table by machine
+3. **Export CSV**, in the columns `Start_Time`, `End_Time`, `Reason`, and `Event_Type`
 
-Paradas planejadas aparecem em todos eles por rastreabilidade, mas só as não
-planejadas entram no cálculo de Disponibilidade.
+Planned stops appear in all of them for traceability, but only unplanned
+ones enter the Availability calculation.
 
 ---
 
-## Configurações
+## Settings
 
-Em *Setup & Admin → Production Settings*:
+In *Setup & Admin → Production Settings*:
 
-| Campo | Padrão | Para quê |
+| Field | Default | What for |
 |---|---|---|
-| OEE Target (%) | 85 | Meta; o OEE fica vermelho abaixo dela |
-| Performance Mode | `LEARNED` | Se a performance é calculada ou fixa |
-| Cooldown (s) | 3 | Tempo de bloqueio após cada toque no painel |
-| Retenção (dias) | 180 | Quanto tempo o histórico é guardado |
-| Shift start hour | 6 | Hora de início da grade de turnos |
-| Shift length (h) | 8 | Duração de cada turno (aceita decimal, ex.: `8.5`) |
+| OEE Target (%) | 85 | Target; OEE turns red below it |
+| Performance Mode | `LEARNED` | Whether performance is calculated or fixed |
+| Cooldown (s) | 3 | Lock time after each touch on the panel |
+| Retention (days) | 180 | How long history is kept |
+| Shift start hour | 6 | Start hour of the shift grid |
+| Shift length (h) | 8 | Duration of each shift (accepts decimal, e.g. `8.5`) |
 
-knobs técnicos (intervalos, limite de eventos, delimitador do CSV) ficam em
+technical knobs (intervals, event limit, CSV delimiter) are in
 `js/config.js`.
 
 ---
 
-## Sincronização entre PCs
+## Sync between PCs
 
-Três níveis:
+Three levels:
 
-1. **localStorage** — salva neste PC
-2. **BroadcastChannel / evento `storage`** — outras abas do mesmo PC
-3. **Firebase Realtime Database** — outros PCs da fábrica (opcional)
+1. **localStorage**: saves on this PC
+2. **BroadcastChannel / `storage` event**: other tabs on the same PC
+3. **Firebase Realtime Database**: other PCs in the factory (optional)
 
-Para ligar o nível 3: crie um Realtime Database em
-[console.firebase.google.com](https://console.firebase.google.com), copie a URL
-e cole em *Setup & Admin* → **Connect Realtime Cloud**. A URL fica salva e a
-sincronização volta sozinha depois de recarregar a página em qualquer PC.
+To enable level 3: create a Realtime Database at
+[console.firebase.google.com](https://console.firebase.google.com), copy the URL,
+and paste it into *Setup & Admin* → **Connect Realtime Cloud**. The URL is saved and
+sync comes back on its own after reloading the page on any PC.
 
-### Status visível
+### Visible status
 
-O estado da nuvem fica sempre à vista, em dois lugares:
+Cloud state is always in view, in two places:
 
-- **Badge no topo** (ao lado das abas): `Local sync only` (cinza/verde),
-  `Connecting…` / `Syncing…` (âmbar pulsando), `Synced HH:MM:SS` (ciano) ou
-  `Cloud error` (vermelho).
-- **Linha de status no card Firebase** (Setup & Admin), com a hora do último
-  sync ou a mensagem de erro.
+- **Badge at the top** (next to the tabs): `Local sync only` (gray/green),
+  `Connecting…` / `Syncing…` (pulsing amber), `Synced HH:MM:SS` (cyan), or
+  `Cloud error` (red).
+- **Status line on the Firebase card** (Setup & Admin), with the time of the last
+  sync or the error message.
 
-### Como os dados se juntam (merge, não sobrescrita)
+### How data comes together (merge, not overwrite)
 
-Um *pull* não substitui mais o banco inteiro — ele **mescla** o que está na
-nuvem com o que está neste PC, para que nenhum PC perca trabalho:
+A *pull* no longer replaces the entire database: it **merges** what is in the
+cloud with what is on this PC, so that no PC loses work:
 
-| Coleção | Regra de merge |
+| Collection | Merge rule |
 | --- | --- |
-| `events` / `notes` | união por `id` (log append-only: nada é perdido) |
-| `machines` | por código: vence o lado com a atividade mais recente |
-| `settings`, `users`, `models`, `stopReasons` | último a escrever, e só quando o conteúdo muda |
+| `events` / `notes` | union by `id` (append-only log: nothing is lost) |
+| `machines` | by code: the side with the most recent activity wins |
+| `settings`, `users`, `models`, `stopReasons` | last write wins, and only when content changes |
 
-`updatedAt` é a versão do merge e só avança quando algo realmente mudou, então
-dois PCs convergem em um passo extra em vez de ficar se sobrescrevendo. Se dois
-operadores controlarem a **mesma máquina** ao mesmo tempo, o estado dessa
-máquina (camada atual, status) segue o PC que agiu por último — os eventos dos
-dois são preservados, mas o ideal é um PC por máquina.
+`updatedAt` is the merge version and only advances when something actually changed, so
+two PCs converge in one extra step instead of endlessly overwriting each other. If two
+operators control the **same machine** at the same time, that machine's state
+(current layer, status) follows the PC that acted last; the events from both
+are preserved, but the ideal is one PC per machine.
 
-### ⚠️ Segurança do Firebase
+### ⚠️ Firebase security
 
-Um banco criado em **Test Mode** aceita leitura e escrita de **qualquer pessoa**
-que tenha a URL — inclusive desconhecidos. Antes de colocar dados reais de
-produção, proteja o banco.
+A database created in **Test Mode** accepts reads and writes from **anyone**
+who has the URL, including strangers. Before putting real production data in,
+secure the database.
 
-Como o app é puramente front-end (sem servidor para validar login), não há
-como fazer autenticação "de verdade" só com as regras do Realtime Database.
-Os caminhos realistas são:
+Since the app is purely front-end (no server to validate login), there is no way
+to do "real" authentication with only Realtime Database rules.
+The realistic paths are:
 
-- **Firebase App Check** — bloqueia acessos vindos de fora do seu app/site;
-- **manter o sistema 100% local** (sem Firebase) em plantas com dados sensíveis.
+- **Firebase App Check**: blocks access coming from outside your app/site;
+- **keep the system 100% local** (no Firebase) in plants with sensitive data.
 
-Se a URL do banco vazar, os dados de produção vazam junto. Na dúvida, rode local.
+If the database URL leaks, production data leaks with it. When in doubt, run locally.
 
 ---
 
-## Estrutura
+## Structure
 
 ```
 oee-panel-winding/
@@ -345,52 +346,52 @@ oee-panel-winding/
     └── smoke-test.js       # 275 verificações automatizadas
 ```
 
-Todos os módulos registram em um único objeto global `window.OEE`, sem
-dependência entre arquivos além dessa ordem de carregamento.
+All modules register in a single global object `window.OEE`, with no
+dependency between files beyond that loading order.
 
 ---
 
-## Testes
+## Tests
 
 ```bash
 npm install jsdom
 node tests/smoke-test.js
 ```
 
-275 verificações automatizadas cobrindo login e permissões, o fluxo de produção
-completo, undo, retrabalho, paradas planejadas e não planejadas, cálculo de
-OEE, configurações, XSS, migração de dados e performance.
+275 automated checks covering login and permissions, the complete production
+flow, undo, rework, planned and unplanned stops, OEE calculation,
+settings, XSS, data migration, and performance.
 
 ---
 
-## Notas de implementação
+## Implementation notes
 
-**Por que não há `innerHTML` para dados de usuário?** Tudo que vem de digitação
-(nome da máquina, número de série, motivo de parada, nota de turno) é escrito
-com `textContent` ou escapado. Botões usam `data-action` com delegação de
-evento, em vez de `onclick="funcao('valor')"` — interpolar texto do usuário
-num atributo HTML permite injeção de código.
+**Why is there no `innerHTML` for user data?** Everything that comes from typing
+(machine name, serial number, stop reason, shift note) is written
+with `textContent` or escaped. Buttons use `data-action` with event delegation,
+instead of `onclick="funcao('valor')"`, because interpolating user text
+into an HTML attribute allows code injection.
 
-**Por que SHA-256 em JS puro?** `crypto.subtle` só existe em contexto seguro
-(https/localhost). Abrindo o arquivo por `file://` não existe, então o app
-levaria um hash embaixo. A implementação está em `js/crypto.js` e é validada
-contra os vetores oficiais do NIST.
+**Why SHA-256 in pure JS?** `crypto.subtle` only exists in a secure context
+(https/localhost). Opening the file via `file://` does not have it, so the app
+would take a hash hit. The implementation is in `js/crypto.js` and is validated
+against the official NIST vectors.
 
-**Limite de histórico.** `db.events` é podado por idade e por quantidade
-(`config.tech.maxEvents`). Sem isso o `localStorage` enche e o navegador passa
-a lançar `QuotaExceededError` — o app agora trata esse erro em vez de travar.
+**History limit.** `db.events` is pruned by age and by count
+(`config.tech.maxEvents`). Without that, `localStorage` fills up and the browser starts
+throwing `QuotaExceededError`; the app now handles that error instead of crashing.
 
-**Modais.** O backdrop que escurece a tela só fecha o diálogo quando o clique
-acontece **no próprio backdrop**. Clicar em qualquer campo ou botão dentro do
-diálogo não fecha — o caso comum de "o modal fecha sozinho ao preencher".
+**Modals.** The backdrop that darkens the screen only closes the dialog when the click
+happens **on the backdrop itself**. Clicking any field or button inside the
+dialog does not close it, avoiding the common case of "the modal closes by itself when filling it in."
 
-**Encoding.** Todos os arquivos são UTF-8 **sem BOM**. O `<meta charset="UTF-8">`
-precisa ser a primeira coisa dentro do `<head>`. Se você editar esses arquivos
-com ferramentas que gravam em ANSI (o PowerShell 5.1 é uma delas), os acentos e
-os emojis viram lixo — rode um teste de encoding antes de commitar.
+**Encoding.** All files are UTF-8 **without BOM**. `<meta charset="UTF-8">`
+must be the first thing inside `<head>`. If you edit these files
+with tools that save in ANSI (PowerShell 5.1 is one of them), accents and
+emojis turn into garbage; run an encoding test before committing.
 
 ---
 
-## Licença
+## License
 
-MIT — veja o arquivo [LICENSE](LICENSE).
+MIT: see the [LICENSE](LICENSE) file.
