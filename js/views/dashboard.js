@@ -200,7 +200,7 @@
         if (!stops.length) {
             var tr = document.createElement('tr');
             var td = document.createElement('td');
-            td.colSpan = 7;
+            td.colSpan = 8;
             td.className = 'empty-hint';
             td.textContent = 'No downtime recorded in this period.';
             tr.appendChild(td);
@@ -216,6 +216,7 @@
 
             appendCell(tr, machineName, 'fw-700');
             appendCell(tr, e.reason || stripPrefix(e.detail, 'Stopped: '), '');
+            appendCell(tr, e.wo || '—', 'mono');
 
             var tdType = document.createElement('td');
             var pill = document.createElement('span');
@@ -341,6 +342,15 @@
             pill.className = 'status-pill status-' + m.status + ' status-pill-compact';
             pill.textContent = '● ' + statusLabel;
             tdStatus.appendChild(pill);
+
+            /* CMMS work order of the CURRENT stop, only while UNPLANNED.
+               Other statuses never carry a WO badge. */
+            if (m.status === 'UNPLANNED' && m.stopWo) {
+                var woPill = document.createElement('span');
+                woPill.className = 'wo-pill';
+                woPill.textContent = m.stopWo;
+                tdStatus.appendChild(woPill);
+            }
 
             /* transformer */
             var tdSn = document.createElement('td');

@@ -163,6 +163,15 @@
             return;
         }
 
+        if (ev.key === 'Enter' && ev.target && ev.target.id === 'stopWoInput') {
+            var woBtn = $('stopWoConfirmBtn');
+            if (woBtn) {
+                ev.preventDefault();
+                woBtn.click();
+            }
+            return;
+        }
+
         if (ev.code !== 'Space' && ev.code !== 'Enter') return;
 
         var inStation = OEE.currentUser &&

@@ -382,6 +382,15 @@
 
         head.appendChild(badge);
         head.appendChild(reason);
+
+        if (e.wo) {
+            var wo = document.createElement('span');
+            wo.className = 'stop-badge badge-wo';
+            wo.style.marginLeft = '6px';
+            wo.textContent = 'OS ' + e.wo;
+            head.appendChild(wo);
+        }
+
         left.appendChild(head);
         left.appendChild(meta);
 
@@ -641,6 +650,7 @@
 
         m.status = 'RUNNING';
         m.stopReason = '';
+        m.stopWo = '';
         m.stateStartTime = now;
         m.stepStartTime = now;
         m.undoSnapshot = null;
@@ -654,6 +664,50 @@
     /* ==================================================================
        STOP / PAUSE
        ================================================================== */
+
+    /* Only the "Machine breakdown" reason requires a CMMS work order. */
+    function isBreakdownReason(reasonName) {
+        return String(reasonName == null ? '' : reasonName)
+            .trim().toLowerCase().replace(/\s+/g, ' ') === 'machine breakdown';
+    }
+
+    /* Accepts "WO-0001", "wo 1", "0001" or "1" and always returns WO-0001.
+       Anything else returns '' so the stop is rejected. */
+    function normalizeCmmsWo(raw) {
+        var s = String(raw == null ? '' : raw).trim().toUpperCase();
+        if (!s) return '';
+
+        var match = /^WO[-\s]?(\d+)$/.exec(s) || /^(\d+)$/.exec(s);
+        if (!match) return '';
+
+        var digits = match[1];
+        if (digits.length < 4) digits = ('0000' + digits).slice(-4);
+
+        return 'WO-' + digits;
+    }
+
+    function showWoField(reasonName, category) {
+        var section = $('stopWoSection');
+        var input = $('stopWoInput');
+        var confirm = $('stopWoConfirmBtn');
+        if (!section) return;
+
+        if (confirm) {
+            confirm.setAttribute('data-reason', reasonName);
+            confirm.setAttribute('data-category', category);
+        }
+
+        section.classList.remove('hidden');
+        if (input) input.focus();
+    }
+
+    function hideWoField() {
+        var section = $('stopWoSection');
+        var input = $('stopWoInput');
+        if (section) section.classList.add('hidden');
+        if (input) input.value = '';
+    }
+
     function openStopModal() {
         if (!OEE.auth.requireLogin()) return;
 
@@ -684,14 +738,32 @@
             (r.category === 'PLANNED' ? planned : unplanned).appendChild(btn);
         });
 
+        hideWoField();
         OEE.utils.openModal('modalStop');
     }
 
-    function confirmStopMachine(reasonName, category) {
+    function confirmStopMachine(reasonName, category, woValue) {
         var m = OEE.machines.getActiveMachine();
         if (!m || m.status !== 'RUNNING') {
             OEE.utils.toast('Machine must be RUNNING to trigger a Stop.', 'warn');
-            return;
+            return false;
+        }
+
+        var wo = '';
+
+        if (isBreakdownReason(reasonName)) {
+            wo = normalizeCmmsWo(
+                woValue != null ? woValue : ($('stopWoInput') ? $('stopWoInput').value : '')
+            );
+
+            /* Mandatory for breakdowns: reveal the field and refuse to save. */
+            if (!wo) {
+                showWoField(reasonName, category);
+                OEE.utils.toast('Enter the CMMS work order for the breakdown (e.g. WO-0001).', 'warn');
+                return false;
+            }
+        } else {
+            hideWoField();
         }
 
         /* Bank the running time BEFORE flipping the state, otherwise this
@@ -700,11 +772,14 @@
 
         m.status = category;
         m.stopReason = reasonName;
+        m.stopWo = wo;
         m.stateStartTime = Date.now();
 
+        hideWoField();
         OEE.storage.save();
         OEE.utils.closeModal('modalStop');
         render();
+        return true;
     }
 
     function resumeMachineFromStop() {
@@ -718,6 +793,7 @@
 
         m.status = 'RUNNING';
         m.stopReason = '';
+        m.stopWo = '';
         m.stateStartTime = now;
         m.stepStartTime = now;
 

@@ -180,6 +180,28 @@ const d = w.document;
   check('data-action buttons present', withAction > 15, withAction + ' found');
 
   /* --------------------------------------------------------------- */
+  section('BRAND - hexagon + pulse mark');
+  const brandSvgs = d.querySelectorAll('.logo .brand-hex');
+  eq('both logos use the hexagon mark', brandSvgs.length, 2);
+  const hexPoly = brandSvgs[0] && brandSvgs[0].querySelector('polygon');
+  eq('hexagon has 6 sides',
+     hexPoly ? hexPoly.getAttribute('points').trim().split(/\s+/).length : 0, 6);
+  check('hexagon mark has the pulse line', !!brandSvgs[0].querySelector('polyline'));
+  check('brand uses the OEE cyan', brandSvgs[0].innerHTML.includes('#06b6d4'));
+  check('factory emoji removed from the page', d.body.innerHTML.indexOf('🏭') === -1);
+  check('no factory emoji in the title', d.title.indexOf('🏭') === -1);
+
+  const iconLink = d.querySelector('link[rel="icon"]');
+  check('SVG favicon present',
+        !!iconLink && iconLink.getAttribute('type') === 'image/svg+xml');
+  const iconHref = iconLink ? decodeURIComponent(iconLink.getAttribute('href')) : '';
+  check('favicon is a hexagon with a pulse',
+        iconHref.includes('<polygon') && iconHref.includes('<polyline') &&
+        iconHref.includes('#06b6d4'));
+  check('favicon hexagon has 6 points',
+        /points='18,2 33,10.5 33,25.5 18,34 3,25.5 3,10.5'/.test(iconHref));
+
+  /* --------------------------------------------------------------- */
   section('AUTH - hashed passwords, no plaintext in storage');
   d.getElementById('loginUser').value = 'operador';
   d.getElementById('loginPass').value = 'operador123';
@@ -276,7 +298,7 @@ const d = w.document;
   await new Promise(r => setTimeout(r, 1150));
   OEE.views.station.openStopModal();
   check('stop modal populated', d.getElementById('stopGridUnplanned').children.length > 0);
-  OEE.views.station.confirmStopMachine('Machine breakdown', 'UNPLANNED');
+  OEE.views.station.confirmStopMachine('Machine breakdown', 'UNPLANNED', 'WO-0007');
   eq('status UNPLANNED', m.status, 'UNPLANNED');
   check('RUN_SEGMENT banked on stop', OEE.db.events.some(e => e.type === 'RUN_SEGMENT'));
 
@@ -714,7 +736,7 @@ const d = w.document;
   const m2b = OEE.machines.getActiveMachine();
   m2b.status = 'RUNNING';
   await new Promise(r => setTimeout(r, 1150));
-  OEE.views.station.confirmStopMachine('Machine breakdown', 'UNPLANNED');
+  OEE.views.station.confirmStopMachine('Machine breakdown', 'UNPLANNED', 'WO-0007');
   await new Promise(r => setTimeout(r, 1150));
   OEE.views.station.resumeMachineFromStop();
   m2b.status = 'RUNNING';
@@ -746,6 +768,73 @@ const d = w.document;
   check('shows the duration', /\d\d:\d\d/.test(stopRows[0].textContent));
   check('step rows are still shown too', histBox.querySelectorAll('.layer-log-item').length > stopRows.length);
 
+  /* --------------------------------------------------------------- */
+  section('CMMS WORK ORDER (breakdown only)');
+  const mWo = OEE.machines.getActiveMachine();
+  mWo.status = 'RUNNING';
+  await new Promise(r => setTimeout(r, 1150));
+
+  const blocked = OEE.views.station.confirmStopMachine('Machine breakdown', 'UNPLANNED');
+  eq('breakdown without OS is refused', blocked, false);
+  eq('machine stays RUNNING when OS is missing', mWo.status, 'RUNNING');
+  check('OS field appears when breakdown is selected',
+        !d.getElementById('stopWoSection').classList.contains('hidden'));
+
+  d.getElementById('stopWoInput').value = '0008';
+  const numericSaved = OEE.views.station.confirmStopMachine('Machine breakdown', 'UNPLANNED');
+  eq('numeric-only OS accepted', numericSaved, true);
+  eq('machine stopped with numeric-only OS', mWo.status, 'UNPLANNED');
+  eq('numeric OS normalized to WO-0008', mWo.stopWo, 'WO-0008');
+
+  const liveW01Row = () => Array.from(
+      d.getElementById('dashMachinesTable').querySelectorAll('tr'))
+      .find(tr => tr.textContent.includes('W01'));
+
+  OEE.views.dashboard.renderLive();
+  let liveRow = liveW01Row();
+  check('live winding shows UNPLANNED (Machine breakdown) with the WO badge',
+        !!liveRow && liveRow.textContent.includes('UNPLANNED') &&
+        liveRow.textContent.includes('Machine breakdown') &&
+        !!liveRow.querySelector('.wo-pill') &&
+        liveRow.querySelector('.wo-pill').textContent === 'WO-0008');
+
+  const woBackup = mWo.stopWo;
+  mWo.stopWo = '';
+  OEE.views.dashboard.renderLive();
+  check('live winding shows no WO badge when the stop has no WO',
+        !liveW01Row().querySelector('.wo-pill'));
+  mWo.stopWo = woBackup;
+  OEE.views.dashboard.renderLive();
+
+  await new Promise(r => setTimeout(r, 1150));
+  OEE.views.station.resumeMachineFromStop();
+  check('number-only OS is saved in full form',
+        OEE.db.events.some(e => e.type === 'STOP_UNPLANNED' &&
+                                e.reason === 'Machine breakdown' && e.wo === 'WO-0008'));
+
+  OEE.views.dashboard.renderLive();
+  check('live winding shows no WO badge after the machine resumes',
+        !liveW01Row().querySelector('.wo-pill'));
+
+  mWo.status = 'RUNNING';
+  await new Promise(r => setTimeout(r, 1150));
+  const otherSaved = OEE.views.station.confirmStopMachine('Material shortage', 'UNPLANNED');
+  eq('other reason saves without OS', otherSaved, true);
+  eq('machine stopped with other reason', mWo.status, 'UNPLANNED');
+  OEE.views.dashboard.renderLive();
+  check('live winding shows no WO badge for a non-breakdown stop',
+        !liveW01Row().querySelector('.wo-pill'));
+  check('OS field hidden for other reasons',
+        d.getElementById('stopWoSection').classList.contains('hidden'));
+  eq('other reason has no OS', mWo.stopWo || '', '');
+  await new Promise(r => setTimeout(r, 1150));
+  OEE.views.station.resumeMachineFromStop();
+
+  OEE.views.station.renderLayerHistory(OEE.machines.getActiveMachine());
+  const woHistory = d.getElementById('subTabLayersContent').textContent;
+  check('station history shows the full OS', woHistory.includes('WO-0007'));
+  check('station history shows the normalized OS', woHistory.includes('WO-0008'));
+
   /* dashboard stop table */
   OEE.nav.switchView('dashboard');
   d.getElementById('dashMachineFilter').value = 'W01';
@@ -760,9 +849,11 @@ const d = w.document;
   const headers = Array.from(d.querySelectorAll('#dashStopsTable, .panel-card table th'))
       .map(t => t.textContent.trim());
   check('table has the required columns',
-        ['Machine', 'Reason', 'Type', 'Duration'].every(c =>
+        ['Machine', 'Reason', 'CMMS OS', 'Type', 'Duration'].every(c =>
           Array.from(d.querySelectorAll('th')).some(th => th.textContent.trim() === c)),
         Array.from(d.querySelectorAll('th')).map(th => th.textContent.trim()).join(' | '));
+
+  check('table shows the CMMS OS', stopTable.textContent.includes('WO-0007'));
 
   check('table shows PLANNED and UNPLANNED types',
         stopTable.textContent.includes('PLANNED') && stopTable.textContent.includes('UNPLANNED'));

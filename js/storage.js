@@ -153,6 +153,7 @@
                 base.name = m.name || m.code;
                 base.status = status;
                 base.stopReason = typeof m.stopReason === 'string' ? m.stopReason : '';
+                base.stopWo = typeof m.stopWo === 'string' ? m.stopWo : '';
                 base.stateStartTime = OEE.utils.isFiniteNumber(m.stateStartTime) ? m.stateStartTime : Date.now();
                 base.stepStartTime = OEE.utils.isFiniteNumber(m.stepStartTime) ? m.stepStartTime : base.stateStartTime;
                 base.transformer = sanitizeTransformer(m.transformer);

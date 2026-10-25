@@ -80,6 +80,14 @@ input, select, textarea {
 
 .logo span { color: var(--cyan); }
 
+.brand-hex {
+    width: 1.15em;
+    height: 1.15em;
+    flex-shrink: 0;
+    display: inline-block;
+    vertical-align: -0.18em;
+}
+
 .nav-tabs { display: flex; gap: var(--sp-2); }
 
 .nav-tab {
@@ -689,6 +697,14 @@ input, select, textarea {
     border: 1px solid var(--red-border);
 }
 
+.badge-wo {
+    background: var(--cyan-soft);
+    color: var(--cyan);
+    border: 1px solid var(--cyan-border);
+}
+
+.stop-wo-section { margin-top: var(--sp-6); }
+
 /* Stop rows inside the station Layer History */
 .layer-log-item.stop { border-left-width: 3px; }
 .layer-log-item.stop.unplanned { border-left-color: var(--red); background: var(--red-bg); }
@@ -1139,3 +1155,18 @@ th {
 .timer-green { color: var(--green); }
 
 .status-pill-compact { padding: var(--sp-1) var(--sp-4); font-size: 10px; }
+
+.wo-pill {
+    display: inline-flex;
+    align-items: center;
+    margin-left: var(--sp-3);
+    padding: var(--sp-1) var(--sp-4);
+    border-radius: var(--r-md);
+    background: var(--cyan-soft);
+    color: var(--cyan);
+    border: 1px solid var(--cyan-border);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    white-space: nowrap;
+}

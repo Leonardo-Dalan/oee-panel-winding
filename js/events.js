@@ -100,12 +100,17 @@
 
         if (elapsed <= 0) return null;
 
-        return logEvent(machine.code, type, 'Stopped: ' + reason, elapsed, {
+        var extra = {
             reason: reason,
             startTime: startTime,
             endTime: endTime,
             stopType: type === 'STOP_UNPLANNED' ? 'UNPLANNED' : 'PLANNED'
-        });
+        };
+
+        /* CMMS work order captured when the breakdown stop was opened. */
+        if (machine.stopWo) extra.wo = machine.stopWo;
+
+        return logEvent(machine.code, type, 'Stopped: ' + reason, elapsed, extra);
     }
 
     function removeEventById(eventId) {

@@ -89,6 +89,7 @@
 
         m.status = 'IDLE';
         m.stopReason = '';
+        m.stopWo = '';
         m.transformer = null;
         m.undoSnapshot = null;
         m.stateStartTime = Date.now();

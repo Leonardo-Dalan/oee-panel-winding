@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OEE // PANEL - Winding Machine MES v3.0</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20viewBox%3D'0%200%2036%2036'%20fill%3D'none'%3E%3Cpolygon%20points%3D'18%2C2%2033%2C10.5%2033%2C25.5%2018%2C34%203%2C25.5%203%2C10.5'%20stroke%3D'%2306b6d4'%20stroke-width%3D'2.4'%20fill%3D'rgba(6%2C182%2C212%2C0.08)'%2F%3E%3Cpolyline%20points%3D'8%2C19%2013%2C19%2016%2C13%2020%2C23%2023%2C17%2028%2C17'%20stroke%3D'%2306b6d4'%20stroke-width%3D'2.2'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%2F%3E%3C%2Fsvg%3E">
     <link rel="stylesheet" href="css/tokens.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -12,7 +13,13 @@
     <!-- ==================== TOPBAR ==================== -->
     <header class="topbar hidden" id="mainTopbar">
         <div class="nav-left">
-            <div class="logo">🏭 OEE<span>//</span>PANEL</div>
+            <div class="logo">
+                <svg class="brand-hex" viewBox="0 0 36 36" fill="none" aria-hidden="true" focusable="false">
+                    <polygon points="18,2 33,10.5 33,25.5 18,34 3,25.5 3,10.5" stroke="#06b6d4" stroke-width="2.4" fill="rgba(6,182,212,0.08)"/>
+                    <polyline points="8,19 13,19 16,13 20,23 23,17 28,17" stroke="#06b6d4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                OEE<span>//</span>PANEL
+            </div>
             <nav class="nav-tabs">
                 <button class="nav-tab active" id="tabBtnStation" data-action="nav" data-arg="station">⏱️ Station</button>
                 <button class="nav-tab" id="tabBtnDashboard" data-action="nav" data-arg="dashboard">📊 Dashboard</button>
@@ -37,7 +44,13 @@
     <section id="viewLogin">
         <div class="login-card">
             <div style="text-align:center; margin-bottom:26px;">
-                <div class="logo" style="justify-content:center; font-size:24px; margin-bottom:6px;">🏭 OEE<span>//</span>PANEL</div>
+                <div class="logo" style="justify-content:center; font-size:24px; margin-bottom:6px;">
+                    <svg class="brand-hex" viewBox="0 0 36 36" fill="none" aria-hidden="true" focusable="false">
+                        <polygon points="18,2 33,10.5 33,25.5 18,34 3,25.5 3,10.5" stroke="#06b6d4" stroke-width="2.4" fill="rgba(6,182,212,0.08)"/>
+                        <polyline points="8,19 13,19 16,13 20,23 23,17 28,17" stroke="#06b6d4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    OEE<span>//</span>PANEL
+                </div>
                 <p style="font-size:12px; color:var(--text-muted);">Winding Machine Execution &amp; OEE System</p>
             </div>
 
@@ -292,6 +305,7 @@
                             <tr>
                                 <th>Machine</th>
                                 <th>Reason</th>
+                                <th>CMMS OS</th>
                                 <th>Type</th>
                                 <th>Start</th>
                                 <th>End</th>
@@ -307,7 +321,7 @@
             <!-- LIVE WINDING MACHINES OVERVIEW -->
             <div class="panel-card">
                 <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span class="card-label">🏭 LIVE WINDING MACHINES OVERVIEW (REALTIME)</span>
+                    <span class="card-label"><svg class="brand-hex" viewBox="0 0 36 36" fill="none" aria-hidden="true" focusable="false"><polygon points="18,2 33,10.5 33,25.5 18,34 3,25.5 3,10.5" stroke="#06b6d4" stroke-width="2.4" fill="rgba(6,182,212,0.08)"/><polyline points="8,19 13,19 16,13 20,23 23,17 28,17" stroke="#06b6d4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg> LIVE WINDING MACHINES OVERVIEW (REALTIME)</span>
                     <span class="live-tag" id="dashSyncStatus">● Live Updating</span>
                 </div>
                 <table class="mt-12">
@@ -492,6 +506,18 @@
 
             <div class="stop-group-title mt-22">PLANNED (EXCLUDED FROM PLANNED TIME)</div>
             <div class="stop-grid" id="stopGridPlanned"></div>
+
+            <div id="stopWoSection" class="stop-wo-section hidden">
+                <div class="stop-group-title">CMMS WORK ORDER — REQUIRED FOR MACHINE BREAKDOWN</div>
+                <div class="form-group">
+                    <label for="stopWoInput">CMMS Work Order (e.g. WO-0001)</label>
+                    <input id="stopWoInput" class="form-control" type="text"
+                           placeholder="WO-0001 or 0001" autocomplete="off" maxlength="20">
+                </div>
+                <p class="hint-text hint-small">Type only the number (0001) and it is saved as WO-0001.</p>
+                <button class="btn-primary" id="stopWoConfirmBtn" data-action="confirm-stop"
+                        data-reason="Machine breakdown" data-category="UNPLANNED">CONFIRM BREAKDOWN STOP</button>
+            </div>
         </div>
     </div>
 

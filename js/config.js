@@ -191,6 +191,7 @@
             name: name,
             status: 'IDLE',          // 'IDLE' (Standby) | 'RUNNING' | 'PLANNED' | 'UNPLANNED'
             stopReason: '',
+            stopWo: '',
             stateStartTime: Date.now(),
             stepStartTime: Date.now(),
             transformer: null,
